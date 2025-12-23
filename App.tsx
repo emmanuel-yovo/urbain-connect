@@ -24,7 +24,8 @@ import {
   Plus,
   MapPin,
   MapPinOff,
-  CloudDownload
+  CloudDownload,
+  AlertCircle
 } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -41,6 +42,9 @@ const App: React.FC = () => {
   // User State
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
   const [favorites, setFavorites] = useState<string[]>([]);
+  
+  // Geo Error State
+  const [geoError, setGeoError] = useState<string | null>(null);
   
   // Ref pour éviter de spammer l'API Google Maps au chargement initial
   const hasInitialSearchDoneRef = useRef(false);
@@ -84,15 +88,19 @@ const App: React.FC = () => {
     let watchId: number | null = null;
 
     if (isGeoEnabled) {
+        // Reset error when trying to enable
+        setGeoError(null);
+
         if (navigator.geolocation) {
             const geoOptions = {
                 enableHighAccuracy: true,
-                timeout: 10000,
+                timeout: 15000,
                 maximumAge: 0
             };
 
             watchId = navigator.geolocation.watchPosition(
                 (position) => {
+                    setGeoError(null); // Success
                     const newCoords = {
                         lat: position.coords.latitude,
                         lng: position.coords.longitude
@@ -107,17 +115,34 @@ const App: React.FC = () => {
                 },
                 (error) => {
                     console.error("Erreur de géolocalisation", error);
+                    let msg = "Impossible de récupérer votre position.";
+                    
+                    // Gestion fine des erreurs
+                    switch(error.code) {
+                        case 1: // PERMISSION_DENIED
+                            msg = "Accès à la localisation refusé."; 
+                            break;
+                        case 2: // POSITION_UNAVAILABLE
+                            msg = "Signal GPS indisponible."; 
+                            break;
+                        case 3: // TIMEOUT
+                            msg = "Délai d'attente dépassé."; 
+                            break;
+                    }
+                    setGeoError(msg);
+                    setUserLocation(null);
                 },
                 geoOptions
             );
         } else {
-             alert("La géolocalisation n'est pas supportée par votre navigateur.");
+             setGeoError("Géolocalisation non supportée.");
              setIsGeoEnabled(false);
         }
     } else {
         setUserLocation(null);
         setRoute(null);
         hasInitialSearchDoneRef.current = false;
+        setGeoError(null);
     }
 
     return () => {
@@ -140,7 +165,14 @@ const App: React.FC = () => {
   }, [activeCategory, fetchedPlaces, favorites]);
 
   const handleLocateMe = () => {
-    setIsGeoEnabled(!isGeoEnabled);
+    if (geoError) {
+        // En cas d'erreur, un clic permet de réessayer et affiche l'alerte
+        alert(`${geoError}\nVérifiez que vous avez autorisé la localisation dans votre navigateur.`);
+        setIsGeoEnabled(true); // Retry trigger
+        setGeoError(null);
+    } else {
+        setIsGeoEnabled(!isGeoEnabled);
+    }
   };
 
   const toggleGeolocation = () => {
@@ -180,20 +212,72 @@ const App: React.FC = () => {
       }
   };
 
+  // --- LOGIQUE DE FERMETURE AUTOMATIQUE ---
+  
+  const handleOpenMenu = () => {
+      setIsMenuOpen(true);
+      // Ferme tout le reste
+      setSelectedPlace(null);
+      setIsStyleMenuOpen(false);
+      setIsAddPlaceOpen(false);
+      setTempLocation(null);
+  };
+
   const handleMarkerClick = (place: Place) => {
     setSelectedPlace(place);
     setRoute(null);
-    setTempLocation(null); // Clear temp marker if clicking a real place
+    setTempLocation(null);
+    
+    // Ferme les autres interfaces pour se concentrer sur le lieu
+    setIsMenuOpen(false);
+    setIsStyleMenuOpen(false);
+    setIsAddPlaceOpen(false);
   };
 
   const handleMapClick = (coords: Coordinates) => {
-    // Si un lieu est sélectionné, on le désélectionne
+    // Gestion des priorités de fermeture
+    if (isMenuOpen) {
+        setIsMenuOpen(false);
+        return;
+    }
     if (selectedPlace) {
         setSelectedPlace(null);
         return;
     }
+    if (isStyleMenuOpen) {
+        setIsStyleMenuOpen(false);
+        return;
+    }
+
     // Sinon, on place un marqueur temporaire (Pin)
     setTempLocation(coords);
+  };
+
+  // Triggered when panning or zooming starts
+  const handleMapInteraction = () => {
+      if (isStyleMenuOpen) setIsStyleMenuOpen(false);
+      if (selectedPlace) setSelectedPlace(null);
+      // Ferme aussi le marqueur temporaire "Lieu sélectionné" pour dégager la vue
+      if (tempLocation) setTempLocation(null);
+  };
+
+  const handleRoute = (target: Coordinates) => {
+      if (!isGeoEnabled || geoError) {
+          alert("Veuillez activer la géolocalisation pour l'itinéraire.");
+          return;
+      }
+      if (userLocation) {
+          setRoute({ start: userLocation, end: target });
+          
+          // AUTO-CLOSE : Quand on lance l'itinéraire, on ferme TOUT pour voir la carte
+          setSelectedPlace(null);
+          setIsMenuOpen(false);
+          setIsStyleMenuOpen(false);
+          setIsAddPlaceOpen(false);
+          setTempLocation(null);
+      } else {
+          alert("Recherche du signal GPS en cours...");
+      }
   };
 
   const toggleLogin = () => {
@@ -211,14 +295,15 @@ const App: React.FC = () => {
       id: `custom-${Date.now()}`,
       rating: 5.0, 
       address: 'Lieu ajouté par utilisateur',
-      // Use provided image or fallback to random
       image: placeData.image || `https://picsum.photos/400/200?random=${Date.now()}`
     };
     
     setFetchedPlaces(prev => [newPlace, ...prev]);
     setMapCenter(newPlace.position); 
-    setSelectedPlace(newPlace);
-    setTempLocation(null); // Remove temp pin after adding
+    setSelectedPlace(newPlace); // Affiche le lieu créé
+    
+    setTempLocation(null); 
+    setIsMenuOpen(false);
   };
 
   const toggleFavorite = (id: string) => {
@@ -230,18 +315,6 @@ const App: React.FC = () => {
       }
       setFavorites(newFavs);
       localStorage.setItem('urban-connect-favorites', JSON.stringify(newFavs));
-  };
-
-  const handleRoute = (target: Coordinates) => {
-      if (!isGeoEnabled) {
-          alert("Veuillez activer la géolocalisation pour l'itinéraire.");
-          return;
-      }
-      if (userLocation) {
-          setRoute({ start: userLocation, end: target });
-      } else {
-          alert("Recherche du signal GPS en cours...");
-      }
   };
 
   const categories = Object.values(CategoryType);
@@ -281,7 +354,7 @@ const App: React.FC = () => {
         <div className="flex flex-col gap-4 max-w-4xl mx-auto">
           <div className="flex items-center justify-between pointer-events-auto">
             <div className="flex items-center gap-2 flex-1 max-w-xl">
-                <button onClick={() => setIsMenuOpen(true)} className="w-10 h-10 bg-white/90 backdrop-blur-md shadow-lg rounded-full flex items-center justify-center text-slate-700 hover:text-blue-600 shrink-0">
+                <button onClick={handleOpenMenu} className="w-10 h-10 bg-white/90 backdrop-blur-md shadow-lg rounded-full flex items-center justify-center text-slate-700 hover:text-blue-600 shrink-0">
                     <Menu size={20} />
                 </button>
                 
@@ -302,8 +375,12 @@ const App: React.FC = () => {
 
             {/* Right Buttons */}
             <div className="flex gap-2 ml-2">
-                <button onClick={handleLocateMe} className={`w-10 h-10 backdrop-blur-md shadow-lg rounded-full flex items-center justify-center transition-colors ${isGeoEnabled ? 'bg-blue-600 text-white' : 'bg-white/90 text-slate-700'}`}>
-                  {isGeoEnabled ? <Locate size={20} /> : <MapPinOff size={20} />}
+                <button 
+                  onClick={handleLocateMe} 
+                  className={`w-10 h-10 backdrop-blur-md shadow-lg rounded-full flex items-center justify-center transition-colors ${geoError ? 'bg-red-500 text-white animate-pulse' : (isGeoEnabled ? 'bg-blue-600 text-white' : 'bg-white/90 text-slate-700')}`}
+                  title={geoError || (isGeoEnabled ? "Désactiver localisation" : "Me localiser")}
+                >
+                  {geoError ? <AlertCircle size={20} /> : (isGeoEnabled ? <Locate size={20} /> : <MapPinOff size={20} />)}
                 </button>
                 <button onClick={toggleLogin} className="h-10 px-3 min-w-[40px] bg-white/90 backdrop-blur-md shadow-lg rounded-full flex items-center justify-center text-slate-700">
                     {isLoggedIn ? <div className="w-6 h-6 bg-blue-500 rounded-full text-white text-[10px] flex items-center justify-center font-bold">JD</div> : <User size={20} />}
@@ -311,8 +388,18 @@ const App: React.FC = () => {
             </div>
           </div>
 
+          {/* Geo Error Toast */}
+          {geoError && (
+              <div className="mt-2 mx-auto max-w-sm pointer-events-auto">
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-xs font-medium flex items-center gap-2 shadow-sm animate-in fade-in slide-in-from-top-2">
+                      <AlertCircle size={14} className="shrink-0" />
+                      {geoError}
+                  </div>
+              </div>
+          )}
+
           {/* Chips */}
-          <div className="flex overflow-x-auto pb-2 gap-2 pointer-events-auto no-scrollbar mask-gradient">
+          <div className="flex overflow-x-auto pb-2 pt-2 gap-2 pointer-events-auto no-scrollbar mask-gradient">
              <button onClick={() => { setActiveCategory('ALL'); setSearchQuery(''); }} className={`px-4 py-2 rounded-full shadow-sm text-sm font-medium whitespace-nowrap ${activeCategory === 'ALL' && !searchQuery ? 'bg-slate-900 text-white' : 'bg-white text-slate-600'}`}>Tous</button>
              {categories.map((cat) => (
                 <CategoryChip key={cat} category={cat} isSelected={activeCategory === cat && !searchQuery} onClick={(c) => { setActiveCategory(c); setSearchQuery(''); }} />
@@ -338,6 +425,10 @@ const App: React.FC = () => {
           onClick={() => {
               setTempLocation(mapCenter); // Si on clique sur le bouton "+", on met le pin au centre
               setIsAddPlaceOpen(true);
+              // Ferme les autres
+              setSelectedPlace(null);
+              setIsMenuOpen(false);
+              setIsStyleMenuOpen(false);
           }}
           className="w-14 h-14 bg-slate-900 text-white shadow-xl rounded-full flex items-center justify-center hover:bg-slate-800 transition-all active:scale-95"
           title="Ajouter un lieu"
@@ -346,7 +437,14 @@ const App: React.FC = () => {
         </button>
 
         {/* Style Switcher ... */}
-        <button onClick={() => setIsStyleMenuOpen(!isStyleMenuOpen)} className="w-12 h-12 bg-white shadow-xl rounded-full flex items-center justify-center text-slate-700 hover:text-blue-600">
+        <button onClick={() => {
+            setIsStyleMenuOpen(!isStyleMenuOpen);
+            // Ferme les autres si on ouvre
+            if (!isStyleMenuOpen) {
+                setSelectedPlace(null);
+                setIsMenuOpen(false);
+            }
+        }} className="w-12 h-12 bg-white shadow-xl rounded-full flex items-center justify-center text-slate-700 hover:text-blue-600">
           <Layers size={24} />
         </button>
         {isStyleMenuOpen && (
@@ -374,6 +472,7 @@ const App: React.FC = () => {
           onMapClick={handleMapClick}
           tempLocation={tempLocation}
           onAddPlaceAtLocation={() => setIsAddPlaceOpen(true)}
+          onMapInteraction={handleMapInteraction}
         />
       </div>
 

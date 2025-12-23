@@ -19,6 +19,8 @@ interface MapViewProps {
   onMapClick?: (coords: Coordinates) => void;
   tempLocation?: Coordinates | null;
   onAddPlaceAtLocation?: () => void;
+  // Trigger when user interacts (pans/zooms)
+  onMapInteraction?: () => void;
 }
 
 const ZOOM_THRESHOLD_LABELS = 15;
@@ -44,7 +46,8 @@ const LocationFlyTo: React.FC<{ coords: Coordinates | null }> = ({ coords }) => 
 const MapEventsHandler: React.FC<{ 
     onCenterChange?: (coords: Coordinates) => void;
     onMapClick?: (coords: Coordinates) => void; 
-}> = ({ onCenterChange, onMapClick }) => {
+    onMapInteraction?: () => void;
+}> = ({ onCenterChange, onMapClick, onMapInteraction }) => {
   const map = useMap();
 
   const updateMapClasses = useCallback(() => {
@@ -67,6 +70,12 @@ const MapEventsHandler: React.FC<{
         const center = map.getCenter();
         onCenterChange({ lat: center.lat, lng: center.lng });
       }
+    },
+    dragstart: () => {
+        if (onMapInteraction) onMapInteraction();
+    },
+    zoomstart: () => {
+        if (onMapInteraction) onMapInteraction();
     },
     load: () => {
        updateMapClasses();
@@ -118,7 +127,8 @@ const MapView: React.FC<MapViewProps> = ({
     route,
     onMapClick,
     tempLocation,
-    onAddPlaceAtLocation
+    onAddPlaceAtLocation,
+    onMapInteraction
 }) => {
   
   // Create a temporary "New Place" icon
@@ -164,6 +174,7 @@ const MapView: React.FC<MapViewProps> = ({
         <MapEventsHandler 
             onCenterChange={onCenterChange} 
             onMapClick={onMapClick}
+            onMapInteraction={onMapInteraction}
         />
         <ZoomDisplay />
 
