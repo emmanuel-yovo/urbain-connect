@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>Urban Connect</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Leaflet CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <script>
+      // Shim to prevent "process is not defined" errors in browser environment
+      window.process = window.process || { env: { API_KEY: '' } };
+
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#2563eb', // blue-600
+              secondary: '#475569', // slate-600
+              accent: '#f59e0b', // amber-500
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+          },
+        },
+      }
+    </script>
+    <style>
+      /* Custom scrollbar for webkit */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+      .leaflet-container {
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+      }
+      /* Hide default leaflet controls if we want custom ones, but standard is fine */
+      
+      /* Style pour les marqueurs personnalisés avec labels */
+      .custom-marker-label {
+        font-family: 'Inter', sans-serif;
+        white-space: nowrap;
+        /* Ensure no weird highlighting */
+        user-select: none;
+      }
+
+      /* Logique d'affichage conditionnel selon le zoom */
+      .marker-name-label {
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        opacity: 1;
+        /* Centrage horizontal strict */
+        transform: translate(-50%, 0) !important;
+        pointer-events: none; /* Let clicks pass through to map if needed, though usually on marker */
+      }
+
+      /* Quand la carte a la classe 'hide-labels' (zoom faible), on cache le texte */
+      .leaflet-container.hide-labels .marker-name-label {
+        opacity: 0 !important;
+        transform: translate(-50%, -5px) !important;
+      }
+      
+      /* Exception : au survol (hover) du marqueur, on affiche toujours le nom même si dézoomé */
+      .leaflet-container.hide-labels .custom-marker-label:hover .marker-name-label {
+        opacity: 1 !important;
+        transform: translate(-50%, 0) !important;
+      }
+
+      /* --- NOUVEAU : Redimensionnement dynamique des icônes selon le zoom --- */
+      
+      .custom-marker-circle {
+        /* Transition fluide pour le changement de taille */
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transform-origin: center center;
+      }
+
+      /* Zoom faible (< 13) : Petit marqueur */
+      .leaflet-container.map-zoom-low .custom-marker-circle {
+        transform: scale(0.65); /* ~20px */
+      }
+      
+      /* Zoom moyen (13-16) : Taille standard */
+      .leaflet-container.map-zoom-med .custom-marker-circle {
+        transform: scale(1); /* 32px */
+      }
+      
+      /* Zoom fort (> 16) : Grand marqueur */
+      .leaflet-container.map-zoom-high .custom-marker-circle {
+        transform: scale(1.3); /* ~42px */
+      }
+
+      /* Au survol, on agrandit légèrement par dessus l'échelle actuelle */
+      .leaflet-container.map-zoom-low .custom-marker-circle:hover {
+        transform: scale(0.85); 
+      }
+      .leaflet-container.map-zoom-med .custom-marker-circle:hover {
+        transform: scale(1.15); 
+      }
+      .leaflet-container.map-zoom-high .custom-marker-circle:hover {
+        transform: scale(1.45); 
+      }
+
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react-dom/server": "https://esm.sh/react-dom@^19.2.3/server",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
+    "react-leaflet": "https://esm.sh/react-leaflet@^5.0.0",
+    "leaflet": "https://esm.sh/leaflet@^1.9.4",
+    "leaflet/": "https://esm.sh/leaflet@^1.9.4/"
+  }
+}
+</script>
+</head>
+  <body class="bg-slate-50 text-slate-900 overflow-hidden">
+    <div id="root"></div>
+  </body>
+</html>

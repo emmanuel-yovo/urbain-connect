@@ -1,0 +1,7 @@
+{
+  "name": "Urban Connect",
+  "description": "A modern platform connecting citizens with local services and urban amenities.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
