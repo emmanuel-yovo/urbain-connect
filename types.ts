@@ -1,21 +1,14 @@
 export enum CategoryType {
-  // Top Tier (Daily/High Traffic)
   RESTAURANT = 'Restaurants',
   BAKERY = 'Boulangeries & Pâtisseries',
   BUS = 'Bus',
   MARKET = 'Marchés',
-  
-  // Tourism & Leisure
   LEISURE = 'Loisirs & Tourisme',
   HOTEL = 'Hôtels',
-  
-  // Services & Utilities
   HEALTH = 'Santé & Urgences',
   GAS = 'Stations-Service',
   MOBILE = 'Opérateurs',
   CYBERCAFE = 'Cybercafés & Impression',
-  
-  // Niche / Specific Needs
   WORSHIP = 'Lieux de Culte',
   HAIR = 'Coiffure',
   DRY_CLEANING = 'Pressing',
@@ -23,9 +16,17 @@ export enum CategoryType {
   SEWING = 'Couture',
 }
 
+export type SponsorTier = 'BASIC' | 'PREMIUM' | 'VIP';
+
 export interface Coordinates {
   lat: number;
   lng: number;
+}
+
+export interface PlaceStats {
+  views: number;
+  clicks: number;
+  directions: number;
 }
 
 export interface Place {
@@ -35,8 +36,16 @@ export interface Place {
   description: string;
   position: Coordinates;
   rating: number;
+  reviewCount?: number;
   address: string;
   image?: string;
+  isBoosted?: boolean;
+  sponsorTier?: SponsorTier;
+  status?: 'active' | 'pending';
+  ownerId?: string;
+  stats?: PlaceStats;
+  phone?: string;
+  hours?: string;
 }
 
 export interface UserLocationState {

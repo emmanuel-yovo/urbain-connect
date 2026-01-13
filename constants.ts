@@ -14,45 +14,64 @@ import {
   Printer,
   Fuel,
   Wrench,
-  Shirt
+  Shirt,
+  Map as MapIcon,
+  Layers,
+  Moon,
+  Sun,
+  Globe
 } from 'lucide-react';
+
+export interface CountryConfig {
+  id: string;
+  name: string;
+  flag: string;
+  coords: [number, number];
+  zoom: number;
+}
+
+export const COUNTRIES: CountryConfig[] = [
+  { id: 'fr', name: 'France', flag: '🇫🇷', coords: [46.2276, 2.2137], zoom: 6 },
+  { id: 'ci', name: 'Côte d\'Ivoire', flag: '🇨🇮', coords: [7.54, -5.5471], zoom: 7 },
+  { id: 'sn', name: 'Sénégal', flag: '🇸🇳', coords: [14.4974, -14.4524], zoom: 7 },
+  { id: 'ma', name: 'Maroc', flag: '🇲🇦', coords: [31.7917, -7.0926], zoom: 6 },
+  { id: 'cm', name: 'Cameroun', flag: '🇨🇲', coords: [7.3697, 12.3547], zoom: 7 },
+  { id: 'ca', name: 'Canada', flag: '🇨🇦', coords: [56.1304, -106.3468], zoom: 4 },
+];
 
 export const MAP_STYLES = [
   { 
-    id: 'carto-voyager', 
-    label: 'Exploration (Moderne)', 
-    // Style "Voyager" : Très coloré mais pastel, idéal pour le tourisme, ressemble à Google Maps
+    id: 'exploration', 
+    label: 'Exploration', 
+    icon: MapIcon,
     url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" 
   },
   { 
-    id: 'carto-light', 
-    label: 'Épuré (Clair)', 
-    // Style "Positron" : Très blanc/gris, idéal pour faire ressortir les données
+    id: 'light', 
+    label: 'Clair', 
+    icon: Sun,
     url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" 
   },
   { 
-    id: 'carto-dark', 
-    label: 'Mode Sombre', 
-    // Style "Dark Matter" : Contraste fort, look "Tech"
+    id: 'dark', 
+    label: 'Sombre', 
+    icon: Moon,
     url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" 
   },
   { 
-    id: 'esri-satellite', 
+    id: 'satellite', 
     label: 'Satellite', 
-    // Imagerie Satellite haute qualité
+    icon: Globe,
     url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" 
   },
 ];
 
-// On utilise CartoDB Voyager par défaut pour un look très propre et lisible
-export const MAP_TILE_LAYER = MAP_STYLES[0].url;
 export const MAP_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
 
 export const CATEGORY_CONFIG: Record<CategoryType, { icon: any, color: string, label: string }> = {
   [CategoryType.LEISURE]: { icon: Ticket, color: 'bg-purple-500', label: 'Loisirs & Tourisme' },
   [CategoryType.RESTAURANT]: { icon: Utensils, color: 'bg-red-500', label: 'Restaurants' },
   [CategoryType.MARKET]: { icon: ShoppingBasket, color: 'bg-emerald-500', label: 'Marchés' },
-  
   [CategoryType.HOTEL]: { icon: Bed, color: 'bg-indigo-500', label: 'Hôtels' },
   [CategoryType.WORSHIP]: { icon: Landmark, color: 'bg-slate-500', label: 'Lieux de Culte' },
   [CategoryType.HEALTH]: { icon: HeartPulse, color: 'bg-rose-600', label: 'Santé' },
@@ -61,12 +80,11 @@ export const CATEGORY_CONFIG: Record<CategoryType, { icon: any, color: string, l
   [CategoryType.GAS]: { icon: Fuel, color: 'bg-gray-600', label: 'Stations' },
   [CategoryType.REPAIR]: { icon: Wrench, color: 'bg-stone-500', label: 'Réparation' },
   [CategoryType.DRY_CLEANING]: { icon: Shirt, color: 'bg-teal-500', label: 'Pressing' },
-
   [CategoryType.SEWING]: { icon: Scissors, color: 'bg-pink-500', label: 'Couture' },
   [CategoryType.HAIR]: { icon: UserCheck, color: 'bg-yellow-500', label: 'Coiffure' },
   [CategoryType.BUS]: { icon: Bus, color: 'bg-blue-500', label: 'Bus' },
   [CategoryType.MOBILE]: { icon: Smartphone, color: 'bg-violet-600', label: 'Opérateurs' },
 };
 
-export const DEFAULT_CENTER: [number, number] = [48.8566, 2.3522]; // Paris
-export const DEFAULT_ZOOM = 13;
+export const DEFAULT_CENTER: [number, number] = [46.2276, 2.2137];
+export const DEFAULT_ZOOM = 6;

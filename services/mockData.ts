@@ -1,56 +1,60 @@
 import { Place, CategoryType } from '../types';
 
-// Nous gardons uniquement quelques lieux emblématiques pour que la carte ne soit pas vide au chargement initial à Paris.
-// Tout le reste proviendra désormais de l'API Google Maps réelle.
 export const MOCK_PLACES: Place[] = [
+  {
+    id: 'boost-1',
+    name: 'Le Gourmet',
+    category: CategoryType.RESTAURANT,
+    description: 'Restaurant gastronomique français réputé pour son cadre exceptionnel et sa cuisine raffinée.',
+    position: { lat: 48.8610, lng: 2.3450 },
+    rating: 4.8,
+    reviewCount: 124,
+    address: '12 Rue de Rivoli, 75001 Paris',
+    image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80',
+    isBoosted: true,
+    sponsorTier: 'VIP',
+    status: 'active',
+    ownerId: 'user-123',
+    stats: { views: 1240, clicks: 450, directions: 89 },
+    phone: '+33 1 42 36 00 00',
+    hours: 'Ouvert jusqu\'à 23:00'
+  },
+  {
+    id: 'boost-2',
+    name: 'Café de la Paix',
+    category: CategoryType.RESTAURANT,
+    description: 'Un café historique face à l\'Opéra Garnier.',
+    position: { lat: 48.8712, lng: 2.3315 },
+    rating: 4.6,
+    reviewCount: 2150,
+    address: '5 Place de l\'Opéra, 75009 Paris',
+    image: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80',
+    isBoosted: true,
+    sponsorTier: 'PREMIUM',
+    status: 'active',
+    ownerId: 'user-123',
+    stats: { views: 850, clicks: 120, directions: 45 }
+  },
   {
     id: '1',
     name: 'Parc des Buttes-Chaumont',
     category: CategoryType.LEISURE,
-    description: 'Un grand espace vert avec un lac artificiel et des vues panoramiques.',
+    description: 'Un grand espace vert avec un lac artificiel.',
     position: { lat: 48.8809, lng: 2.3828 },
     rating: 4.8,
     address: '1 Rue Botzaris, 75019 Paris',
-    image: 'https://picsum.photos/400/200?random=1'
-  },
-  {
-    id: '7',
-    name: 'Tour Eiffel',
-    category: CategoryType.LEISURE,
-    description: 'Le monument le plus emblématique de Paris.',
-    position: { lat: 48.8584, lng: 2.2945 },
-    rating: 4.9,
-    address: 'Champ de Mars, 5 Avenue Anatole France, 75007 Paris',
-    image: 'https://picsum.photos/400/200?random=7'
-  },
-  {
-    id: '8',
-    name: 'Musée du Louvre',
-    category: CategoryType.LEISURE,
-    description: 'Le plus grand musée d\'art du monde.',
-    position: { lat: 48.8606, lng: 2.3376 },
-    rating: 4.8,
-    address: 'Rue de Rivoli, 75001 Paris',
-    image: 'https://picsum.photos/400/200?random=8'
-  },
-  {
-    id: '12',
-    name: 'Cathédrale Notre-Dame',
-    category: CategoryType.WORSHIP,
-    description: 'Chef-d\'œuvre de l\'architecture gothique française.',
-    position: { lat: 48.8529, lng: 2.3500 },
-    rating: 4.8,
-    address: '6 Parvis Notre-Dame - Pl. Jean-Paul II, 75004 Paris',
-    image: 'https://picsum.photos/400/200?random=12'
+    image: 'https://picsum.photos/seed/park/800/600'
   },
   {
     id: '10',
-    name: 'Le Bouillon Chartier',
-    category: CategoryType.RESTAURANT,
-    description: 'Un restaurant historique servant une cuisine française traditionnelle.',
-    position: { lat: 48.8719, lng: 2.3435 },
-    rating: 4.5,
-    address: '7 Rue du Faubourg Montmartre, 75009 Paris',
-    image: 'https://picsum.photos/400/200?random=10'
+    name: 'Boulangerie Pâtisserie',
+    category: CategoryType.BAKERY,
+    description: 'Artisans boulangers traditionnels.',
+    position: { lat: 48.8650, lng: 2.3550 },
+    rating: 4.7,
+    address: '24 Rue des Archives, 75004 Paris',
+    isBoosted: true,
+    sponsorTier: 'BASIC',
+    image: 'https://picsum.photos/seed/bakery/800/600'
   }
 ];
